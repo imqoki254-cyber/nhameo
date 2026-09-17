@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thần Số Học - Nhà Mèo Manifest VIP</title>
+    
+    <!-- THƯ VIỆN XUẤT PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* --- FONTS & CSS CƠ BẢN --- */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&family=Orbitron:wght@500;800&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'UTM Avo', 'Montserrat', sans-serif; }
+        
+        body {
+            background-color: #05010a; background-image: url('assets/hinh_1.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+        }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 1, 15, 0.75); z-index: -1; }
+
+        /* =========================================
+           1. MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ / QUÊN MK
+           ========================================= */
+        #auth-screen, #forgot-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 1, 15, 0.95); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; backdrop-filter: blur(15px);
+        }
+        /* Mặc định ẩn màn hình quên mật khẩu */
+        #forgot-screen { display: none; }
+
+        .auth-box {
+            background: #0a0212; width: 90%; max-width: 400px;
+            border: 1px solid #d633ff; border-radius: 12px; padding: 40px 30px;
+            box-shadow: 0 0 40px rgba(214, 51, 255, 0.3), inset 0 0 15px rgba(214, 51, 255, 0.1);
+            text-align: center; animation: fadeIn 0.5s ease-out;
+        }
+        .auth-logo { font-family: 'Orbitron', sans-serif; font-size: 26px; color: #fff; text-shadow: 0 0 15px #d633ff; margin-bottom: 5px; }
+        .auth-subtitle { font-size: 14px; color: #e8a0ff; margin-bottom: 25px; line-height: 1.5;}
+
+        .auth-input {
+            width: 100%; padding: 14px 15px; margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid #712299;
+            border-radius: 6px; outline: none; transition: 0.3s; font-size: 15px;
+        }
+        .auth-input:focus { border-color: #d633ff; box-shadow: 0 0 10px rgba(214, 51, 255, 0.4); }
+
+        .btn-auth {
+            width: 100%; padding: 14px; background: linear-gradient(45deg, #d633ff, #712299); color: #fff;
+            border: 1px solid #ff7bff; border-radius: 6px; font-weight: 800; font-size: 16px;
+            cursor: pointer; transition: 0.3s; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-auth:hover { background: #ff7bff; box-shadow: 0 0 20px #d633ff; }
+
+        .btn-google {
+            width: 100%; padding: 12px; background: #fff; color: #333; border: none; border-radius: 6px;
+            font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-google:hover { background: #e0e0e0; }
+        .btn-google img { width: 20px; }
+
+        .auth-switch { margin-top: 20px; font-size: 13px; color: #a0d8e6; cursor: pointer; transition: 0.2s;}
+        .auth-switch:hover { color: #d633ff; text-decoration: underline; }
+
+        /* =========================================
+           2. GIAO DIỆN CHÍNH & THANH ĐIỀU HƯỚNG
+           ========================================= */
+        #main-app { display: none; width: 100%; flex-direction: column; align-items: center; padding-top: 60px;}
+
+        .top-nav {
+            width: 100%; background: rgba(10, 2, 20, 0.95); border-bottom: 1px solid #712299;
+            padding: 10px 30px; display: flex; justify-content: space-between; align-items: center;
+            position: fixed; top: 0; z-index: 100; box-shadow: 0 0 20px rgba(214, 51, 255, 0.2);
+        }
+        .nav-logo { font-family: 'Orbitron', sans-serif; font-size: 18px; color: #d633ff; font-weight: 700; letter-spacing: 1px;}
+        .user-menu { display: flex; align-items: center; gap: 15px; }
+        
+        .coin-balance { 
+            background: rgba(214, 51, 255, 0.15); border: 1px solid #d633ff; padding: 5px 15px; 
+            border-radius: 20px; color: #ff7bff; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 5px;
+        }
+        .user-profile { font-size: 14px; color: #fff; display: flex; align-items: center; gap: 10px; border-left: 1px solid #712299; padding-left: 15px;}
+        .btn-logout { background: transparent; border: 1px solid #555; color: #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;}
+        .btn-logout:hover { background: #d633ff; color: #000; border-color: #d633ff;}
+        
+        .btn-topup {
+            background: linear-gradient(45deg, #d633ff, #712299); color: #fff; border: 1px solid #ff7bff; padding: 5px 15px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase;
+        }
+        .btn-topup:hover { box-shadow: 0 0 15px #d633ff; transform: scale(1.05); }
+
+        header { text-align: center; margin-top: 20px; z-index: 10; width: 100%; }
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 34px; color: #ffffff; text-shadow: 0 0 10px #d633ff, 0 0 20px #ff7bff; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; font-weight: 800;}
+        p.subtitle { color: #f0c4ff; font-size: 16px; letter-spacing: 1px; }
+
+        .center-portal { height: 25vh; min-height: 150px; width: 100%; pointer-events: none; }
+
+        .control-panel { width: 95%; max-width: 900px; z-index: 10; background: rgba(10, 2, 20, 0.75); backdrop-filter: blur(10px); border: 1px solid rgba(214, 51, 255, 0.4); border-radius: 10px; padding: 25px; box-shadow: 0 0 20px rgba(214, 51, 255, 0.15); margin-bottom: 30px; position: relative;}
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; font-weight: 700; color: #e8a0ff; font-size: 13px; text-transform: uppercase; }
+        input, select { padding: 10px 12px; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid #712299; border-radius: 6px; font-size: 15px; outline: none;}
+        input:focus, select:focus { border-color: #d633ff; box-shadow: 0 0 10px rgba(214, 51, 255, 0.5); }
+        select option { background: #0a0112; color: #fff; }
+
+        .tiers { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .tiers button { padding: 10px 20px; background: rgba(0,0,0,0.5); color: #e8a0ff; border: 1px solid #d633ff; border-radius: 4px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: 'Orbitron', sans-serif;}
+        .tiers button:hover { background: rgba(214, 51, 255, 0.2); color: #fff;}
+        .btn-premium { background: linear-gradient(45deg, #d633ff, #712299) !important; color: #fff !important; border-color: #ff7bff !important;}
+        .btn-premium:hover { box-shadow: 0 0 15px #d633ff; transform: scale(1.05); }
+
+        #results { display: none; width: 95%; max-width: 1000px; z-index: 10; margin-bottom: 30px; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .card { background: linear-gradient(135deg, rgba(15, 3, 25, 0.9), rgba(5, 0, 10, 0.95)); border: 1px solid #712299; padding: 20px; text-align: center; cursor: pointer; border-radius: 8px; border-top: 3px solid #d633ff; transition: 0.3s; animation: fadeIn 0.4s ease backwards;}
+        .card:hover { transform: translateY(-5px); border-color: #ff7bff; box-shadow: 0 10px 20px rgba(214, 51, 255, 0.2); }
+        .card h3 { color: #f0c4ff; font-size: 14px; text-transform: uppercase; margin-bottom: 5px; }
+        .card .meaning-label { font-size: 12px; color: #a0d8e6; margin-bottom: 10px; }
+        .card .number { font-family: 'Orbitron', sans-serif; font-size: 50px; font-weight: 800; color: #ffffff; text-shadow: 0 0 10px #d633ff; margin-bottom: 5px; line-height: 1; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* =========================================
+           3. BẢNG NẠP XU (ĐÃ LOẠI BỎ Ô NHẬP MÃ)
+           ========================================= */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .payment-box { background: #08010f; width: 90%; max-width: 450px; border: 2px solid #d633ff; border-radius: 12px; padding: 30px; box-shadow: 0 0 40px rgba(214, 51, 255, 0.4); text-align: center; position: relative; }
+        .payment-title { font-family: 'Orbitron', sans-serif; font-size: 20px; color: #ff7bff; margin-bottom: 10px; text-transform: uppercase;}
+        .payment-desc { font-size: 13px; color: #e0e0e0; margin-bottom: 15px; line-height: 1.5; }
+        
+        .package-selection { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+        .pkg-btn { flex: 1; padding: 8px 5px; background: rgba(0,0,0,0.5); border: 1px solid #712299; border-radius: 8px; color: #e0e0e0; cursor: pointer; transition: 0.3s; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; }
+        .pkg-btn span { font-family: 'Montserrat', sans-serif; font-size: 11px; color: #a0d8e6; font-weight: 500; display: block; margin-top: 2px;}
+        .pkg-btn.active { background: rgba(214, 51, 255, 0.3); border-color: #ff7bff; color: #fff; box-shadow: 0 0 15px rgba(214, 51, 255, 0.5); }
+        .pkg-btn.active span { color: #ff7bff; font-weight: 700;}
+        
+        .qr-container { background: #fff; padding: 10px; border-radius: 10px; display: inline-block; margin-bottom: 15px; border: 2px solid #d633ff; box-shadow: 0 0 20px rgba(214, 51, 255, 0.3); }
+        .qr-container img { width: 100%; max-width: 220px; display: block; border-radius: 5px; }
+
+        .payment-instruction { background: rgba(214, 51, 255, 0.1); padding: 15px; border-left: 3px solid #d633ff; font-size: 13.5px; text-align: left; margin-bottom: 25px; line-height: 1.6;}
+        .payment-instruction strong { color: #ff7bff; }
+        
+        .btn-confirm-pay { width: 100%; padding: 15px; background: #d633ff; color: #000; border: none; border-radius: 6px; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-confirm-pay:hover { background: #ff7bff; box-shadow: 0 0 20px #d633ff; }
+        .btn-confirm-pay.loading { background: #555; pointer-events: none; color: #fff; }
+        .close-btn { position: absolute; top: 5px; right: 15px; font-size: 28px; color: #d633ff; cursor: pointer; }
+
+        /* =========================================
+           4. BÁO CÁO PDF VÀ MODAL
+           ========================================= */
+        #pdf-content { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        #detailed-report-section { display: none; width: 100%; max-width: 850px; background: #07020d; padding: 30px; color: #fff; }
+        .pdf-header-container { text-align: center; border-bottom: 2px solid #712299; padding-bottom: 20px; margin-bottom: 30px; }
+        .pdf-title { font-family: 'Orbitron', sans-serif; color: #d633ff; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
+        .pdf-user-info { display: flex; justify-content: space-around; background: #130624; padding: 15px; border-radius: 8px; border: 1px solid #712299; font-size: 14px; font-weight: 600; }
+        .pdf-user-info span { color: #e8a0ff; }
+        .pdf-user-info strong { color: #fff; margin-right: 5px; }
+        
+        .pdf-grid-layout { column-count: 2; column-gap: 20px; }
+        .pdf-card-item { background: #0d0417; border: 1px solid #4a1566; border-radius: 8px; padding: 20px; margin-bottom: 20px; break-inside: avoid-column; page-break-inside: avoid; }
+        .pdf-item-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #4a1566; padding-bottom: 10px; margin-bottom: 15px; }
+        .pdf-item-title-group h3 { color: #ff7bff; font-size: 16px; text-transform: uppercase; margin-bottom: 4px; font-weight: 800;}
+        .pdf-item-title-group p { color: #a0d8e6; font-size: 12px; font-weight: 500; }
+        .pdf-item-number { font-family: 'Orbitron', sans-serif; font-size: 34px; font-weight: 800; color: #fff; line-height: 1; }
+        .pdf-item-body { color: #d1d5db; font-size: 13px; line-height: 1.5; text-align: justify; }
+        .pdf-item-body h4 { color: #d633ff; margin: 12px 0 6px 0; font-size: 14px; text-transform: uppercase; }
+        .pdf-item-body ul { margin-left: 15px; margin-bottom: 10px; }
+        .pdf-item-body li { margin-bottom: 4px; }
+        .pdf-highlight { background: #1a082b; padding: 10px; border-left: 3px solid #d633ff; font-style: italic; color: #f0c4ff; font-size: 13px; margin-bottom: 15px; border-radius: 0 4px 4px 0; }
+        
+        #export-section { display: none; margin-bottom: 50px; text-align: center; z-index: 10; width: 100%;}
+        .btn-export { padding: 14px 35px; background: #d633ff; color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-family: 'Montserrat', sans-serif;}
+        .btn-export:hover { background: #ff7bff; transform: scale(1.02); }
+        .btn-export.loading { background: #555; pointer-events: none; }
+        
+        /* Modal Xem nhanh */
+        .modal-content { background: #08010f; width: 90%; max-width: 650px; border: 1px solid #d633ff; border-radius: 12px; padding: 30px; position: relative; max-height: 85vh; overflow-y: auto; }
+        .modal-header { text-align: center; border-bottom: 1px dashed #712299; padding-bottom: 10px; margin-bottom: 20px;}
+        .modal-title { font-size: 16px; color: #e8a0ff; text-transform: uppercase; }
+        .modal-number { font-family: 'Orbitron', sans-serif; font-size: 55px; font-weight: 800; color: #ffffff; text-shadow: 0 0 15px #d633ff; line-height: 1;}
+        .modal-body { color: #e0e0e0; font-size: 14.5px; line-height: 1.6; text-align: justify; }
+        .modal-body h4 { color: #ff7bff; margin-top: 15px; margin-bottom: 8px; font-size: 15px; }
+        .modal-body ul { margin-left: 20px; margin-bottom: 10px; }
+        .modal-content::-webkit-scrollbar { width: 6px; }
+        .modal-content::-webkit-scrollbar-thumb { background: #d633ff; border-radius: 4px;}
+    </style>
+</head>
+<body>
+
+    <!-- =========================================
+         MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ
+         ========================================= -->
+    <div id="auth-screen">
+        <div class="auth-box">
+            <div class="auth-logo">COSMIC LOGIN</div>
+            <div class="auth-subtitle" id="auth-subtitle">Kết nối hệ thống Nhà Mèo Manifest</div>
+            
+            <input type="text" class="auth-input" id="auth-email" placeholder="Email hoặc Số điện thoại" required>
+            <input type="password" class="auth-input" id="auth-password" placeholder="Mật khẩu (Gồm chữ và số)" required>
+            <input type="password" class="auth-input" id="auth-confirm" placeholder="Xác nhận lại mật khẩu" style="display: none;">
+            
+            <!-- Link mở trang Quên mật khẩu -->
+            <div id="forgot-pw-link" style="text-align: right; margin-bottom: 15px; font-size: 13px; color: #ff7bff; cursor: pointer; display: block;" onclick="toggleForgotScreen(true)">Quên mật khẩu?</div>
+            
+            <button class="btn-auth" id="btn-action" onclick="handleAuthAction()">ĐĂNG NHẬP</button>
+            
+            <div style="margin: 15px 0; color: #888; font-size: 12px;">HOẶC</div>
+            
+            <button class="btn-google" onclick="handleGoogleLogin()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+                Đăng nhập bằng Google
+            </button>
+            
+            <div class="auth-switch" id="auth-switch" onclick="toggleAuthMode()">
+                Chưa có tài khoản? Đăng ký ngay
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         MÀN HÌNH QUÊN MẬT KHẨU (GIAO DIỆN MỚI)
+         ========================================= -->
+    <div id="forgot-screen">
+        <div class="auth-box">
+            <div class="auth-logo" style="font-size: 22px;">KHÔI PHỤC MẬT KHẨU</div>
+            <div class="auth-subtitle">Nhập Email bạn đã dùng để đăng ký. Hệ thống sẽ gửi một liên kết an toàn để bạn đặt lại mật khẩu.</div>
+            
+            <input type="email" class="auth-input" id="forgot-email" placeholder="Nhập Email của bạn..." required>
+            
+            <button class="btn-auth" onclick="processForgotPassword()">GỬI LIÊN KẾT ĐẶT LẠI</button>
+            
+            <div class="auth-switch" onclick="toggleForgotScreen(false)">
+                ← Quay lại trang Đăng nhập
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         APP CHÍNH THỨC
+         ========================================= -->
+    <div id="pdf-content">
+        <div class="top-nav" id="top-nav">
+            <div class="nav-logo">NHÀ MÈO MANIFEST</div>
+            <div class="user-menu">
+                <div class="coin-balance">💎 <span id="user-xu">0</span> Xu</div>
+                <button class="btn-topup" onclick="openPaymentModal()">💳 Nạp Xu</button>
+                <div class="user-profile">
+                    <span id="display-email">user@gmail.com</span>
+                    <button class="btn-logout" onclick="handleLogout()">Thoát</button>
+                </div>
+            </div>
+        </div>
+
+        <header id="main-header">
+            <h1>Hệ Thống Thần Số Học</h1>
+            <p class="subtitle">Giải mã Bản Đồ Năng Lượng Linh Hồn</p>
+        </header>
+
+        <div class="center-portal" id="space-portal"></div>
+
+        <div class="control-panel" id="user-input-panel">
+            <div class="form-grid">
+                <div class="form-group"><label>Họ và tên:</label><input type="text" id="fullname" required></div>
+                <div class="form-group">
+                    <label>Giới tính:</label>
+                    <select id="gender"><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select>
+                </div>
+                <div class="form-group"><label>Ngày sinh:</label><input type="date" id="dob" required></div>
+                <div class="form-group"><label>Giờ sinh (Tùy chọn):</label><input type="time" id="tob" value="12:00"></div>
+            </div>
+
+            <div class="tiers" id="action-buttons">
+                <button class="tier-btn" onclick="calculateData(5, this, 0)">[ Xem Cơ Bản - Miễn phí ]</button>
+                <button class="tier-btn btn-premium" onclick="calculateData(21, this, 10)">💎 [ Xem Trọn Bộ VIP - Tốn 10 Xu ]</button>
+            </div>
+        </div>
+
+        <div id="results"><div class="result-grid" id="gridContainer"></div></div>
+        
+        <div id="detailed-report-section"></div>
+    </div> 
+
+    <div id="export-section">
+        <button class="btn-export" id="btnExport" onclick="downloadPDF()">📥 Tải Báo Cáo PDF</button>
+    </div>
+
+    <!-- BẢNG NẠP XU -->
+    <div class="modal-overlay" id="paymentModal" onclick="closePaymentModal(event)">
+        <div class="payment-box" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="forceClosePaymentModal()">×</span>
+            <div class="payment-title">NẠP XU VÀO HỆ THỐNG</div>
+            <div class="payment-desc">Chọn gói nạp bên dưới. Quét mã QR qua ứng dụng ngân hàng để thanh toán.</div>
+            
+            <div class="package-selection">
+                <button class="pkg-btn" id="btn-pkg-20" onclick="selectPackage(20)">20.000đ<br><span>Nhận 20 Xu</span></button>
+                <button class="pkg-btn active" id="btn-pkg-50" onclick="selectPackage(50)">50.000đ<br><span>Nhận 50 Xu</span></button>
+                <button class="pkg-btn" id="btn-pkg-100" onclick="selectPackage(100)">100.000đ<br><span>Nhận 100 Xu</span></button>
+            </div>
+
+            <div class="qr-container">
+                <img id="qr-image" src="https://vietqr.app/img?bank=TPBank&acc=13495676789&template=&amount=50000&des=TKP254&showinfo=true&fullacc=true&holder=NGUYEN%20QUOC%20KIET&store=Nh%C3%A0%20M%C3%A8o%20Manifest" alt="QR thanh toán">
+            </div>
+
+            <div class="payment-instruction">
+                1. Quét mã QR để thanh toán chính xác số tiền.<br>
+                2. Nội dung chuyển khoản: <strong id="transfer-memo">TKP254 [SỐ ĐIỆN THOẠI]</strong><br>
+                3. Bấm xác nhận sau khi App Ngân hàng báo chuyển thành công.
+            </div>
+
+            <button class="btn-confirm-pay" id="btnConfirmPay" onclick="verifyPayment()">XÁC NHẬN ĐÃ CHUYỂN KHOẢN</button>
+        </div>
+    </div>
+
+    <!-- MODAL XEM CHI TIẾT WEB -->
+    <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="forceCloseModal()">×</span>
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Chỉ số</div>
+                <div class="modal-number" id="modalNumber">0</div>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SCRIPT 1: MODULE FIREBASE (XỬ LÝ ĐĂNG NHẬP, QUÊN MẬT KHẨU)        -->
+    <!-- ================================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { 
+            getAuth, signInWithPopup, GoogleAuthProvider, 
+            createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+            signOut, onAuthStateChanged, sendPasswordResetEmail
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrlyBzCOZUdfxI2TPOAbympjDjEOHBeOQ",
+            authDomain: "nhameomanifest.firebaseapp.com",
+            projectId: "nhameomanifest",
+            storageBucket: "nhameomanifest.firebasestorage.app",
+            messagingSenderId: "778000968636",
+            appId: "1:778000968636:web:d082bb0cd1af895af519b9",
+            measurementId: "G-GX20NMCP30"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        let isLoginMode = true;
+        let inactivityTimer;
+
+        // Auto Logout 10 phút
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            if (auth.currentUser) {
+                inactivityTimer = setTimeout(() => {
+                    alert("⚠️ Đã hết 10 phút không hoạt động. Hệ thống tự động đăng xuất để bảo vệ tài khoản!");
+                    window.handleLogout();
+                }, 10 * 60 * 1000);
+            }
+        }
+        ['mousemove', 'keypress', 'click', 'scroll'].forEach(evt => window.addEventListener(evt, resetInactivityTimer, { passive: true }));
+
+        // Tắt/Mở trang Quên Mật Khẩu
+        window.toggleForgotScreen = function(show) {
+            if (show) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('forgot-screen').style.display = 'flex';
+                document.getElementById('forgot-email').value = ""; // Xóa trắng ô email cũ
+            } else {
+                document.getElementById('forgot-screen').style.display = 'none';
+                document.getElementById('auth-screen').style.display = 'flex';
+            }
+        };
+
+        // Gửi link Đặt lại mật khẩu (Giao diện mới)
+        window.processForgotPassword = function() {
+            let email = document.getElementById('forgot-email').value.trim();
+            if (!email) {
+                alert("Vui lòng nhập Email của bạn!");
+                return;
+            }
+
+            // Kiểm tra sơ bộ không cho nhập SĐT
+            if (/^(0|\+84)[3|5|7|8|9][0-9]{8}$/.test(email) || !email.includes("@")) {
+                alert("❌ Bạn phải nhập địa chỉ Email hợp lệ (Không dùng Số điện thoại).");
+                return;
+            }
+
+            sendPasswordResetEmail(auth, email)
+                .then(() => { 
+                    alert("✅ Hệ thống đã gửi một liên kết đặt lại mật khẩu.\nVui lòng kiểm tra Hộp thư Email (hoặc mục Thư Rác) của bạn!"); 
+                    window.toggleForgotScreen(false); // Thành công thì tự lùi về trang login
+                })
+                .catch((err) => { 
+                    if (err.code === 'auth/user-not-found') {
+                        alert("❌ Không tìm thấy Email này trong hệ thống. Bạn chưa đăng ký?");
+                    } else if (err.code === 'auth/invalid-email') {
+                        alert("❌ Định dạng Email không đúng.");
+                    } else {
+                        alert("❌ Lỗi hệ thống: " + err.message); 
+                    }
+                });
+        };
+
+        window.toggleAuthMode = function() {
+            isLoginMode = !isLoginMode;
+            if(isLoginMode) {
+                document.getElementById('auth-subtitle').innerText = "Kết nối hệ thống Nhà Mèo Manifest";
+                document.getElementById('btn-action').innerText = "ĐĂNG NHẬP";
+                document.getElementById('auth-switch').innerText = "Chưa có tài khoản? Đăng ký ngay";
+                document.getElementById('auth-confirm').style.display = "none";
+                document.getElementById('forgot-pw-link').style.display = "block";
+            } else {
+                document.getElementById('auth-subtitle').innerText = "Tạo tài khoản mới trong hệ thống";
+                document.getElementById('btn-action').innerText = "ĐĂNG KÝ TÀI KHOẢN";
+                document.getElementById('auth-switch').innerText = "Đã có tài khoản? Quay lại đăng nhập";
+                document.getElementById('auth-confirm').style.display = "block";
+                document.getElementById('forgot-pw-link').style.display = "none";
+            }
+        };
+
+        window.handleAuthAction = function() {
+            let userInput = document.getElementById('auth-email').value.trim();
+            let pass = document.getElementById('auth-password').value;
+            let confirmPass = document.getElementById('auth-confirm').value;
+
+            if (!userInput || !pass) { alert("Vui lòng điền đầy đủ thông tin!"); return; }
+
+            let isPhone = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/.test(userInput);
+            let firebaseEmail = userInput;
+            if (isPhone) { firebaseEmail = userInput + "@nhameo.com"; } 
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userInput)) {
+                alert("Định dạng không hợp lệ. Vui lòng nhập Email hoặc Số điện thoại!"); return;
+            }
+
+            if (pass.length < 6 || !/\d/.test(pass)) {
+                alert("Mật khẩu yếu! Phải có ít nhất 6 ký tự và chứa ít nhất 1 chữ số."); return;
+            }
+
+            if (!isLoginMode) {
+                if (pass !== confirmPass) { alert("Mật khẩu xác nhận không khớp!"); return; }
+                createUserWithEmailAndPassword(auth, firebaseEmail, pass)
+                    .then(() => { alert("🎉 Đăng ký thành công!"); })
+                    .catch((err) => { 
+                        if(err.code === 'auth/email-already-in-use') {
+                            alert("❌ Email/SĐT này đã được đăng ký rồi! Vui lòng chuyển sang Đăng Nhập.");
+                        } else {
+                            alert("❌ Lỗi đăng ký: " + err.message); 
+                        }
+                    });
+            } else {
+                signInWithEmailAndPassword(auth, firebaseEmail, pass)
+                    .then(() => { /* onAuthStateChanged sẽ lo UI */ })
+                    .catch((err) => { alert("❌ Sai Email/SĐT hoặc Mật khẩu!"); });
+            }
+        };
+
+        window.handleGoogleLogin = function() {
+            signInWithPopup(auth, provider).catch((err) => { alert("Đăng nhập bị hủy!"); });
+        };
+
+        window.handleLogout = function() {
+            signOut(auth).then(() => {
+                clearTimeout(inactivityTimer);
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('forgot-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'none';
+                document.getElementById('results').style.display = 'none';
+                document.getElementById('export-section').style.display = 'none';
+                document.getElementById('auth-password').value = "";
+                document.getElementById('auth-confirm').value = "";
+            });
+        };
+
+        // Lắng nghe trạng thái đăng nhập từ Firebase
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('forgot-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                
+                let displayString = user.email.replace("@nhameo.com", "");
+                document.getElementById('display-email').innerText = displayString;
+
+                let userWallets = JSON.parse(localStorage.getItem('cosmic_user_wallets')) || {};
+                if (userWallets[user.uid] === undefined) {
+                    userWallets[user.uid] = 0;
+                    localStorage.setItem('cosmic_user_wallets', JSON.stringify(userWallets));
+                }
+                window.currentXu = userWallets[user.uid];
+                document.getElementById('user-xu').innerText = window.currentXu;
+                window.currentUserUID = user.uid;
+                resetInactivityTimer();
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('main-app').style.display = 'none';
+            }
+        });
+
+        window.updateCurrentWallet = function(amountChange) {
+            if (window.currentUserUID) {
+                window.currentXu += amountChange;
+                document.getElementById('user-xu').innerText = window.currentXu;
+                let userWallets = JSON.parse(localStorage.getItem('cosmic_user_wallets')) || {};
+                userWallets[window.currentUserUID] = window.currentXu;
+                localStorage.setItem('cosmic_user_wallets', JSON.stringify(userWallets));
+            }
+        };
+    </script>
+
+    <!-- ================================================================= -->
+    <!-- SCRIPT 2: LOGIC THẦN SỐ HỌC, ĐỔI QR VÀ XUẤT PDF                   -->
+    <!-- ================================================================= -->
+    <script>
+        window.currentXu = 0;
+        let selectedXu = 50;
+
+        const qrData = {
+            20: "https://vietqr.app/img?bank=TPBank&acc=13495676789&template=&amount=20000&des=TKP254&showinfo=true&fullacc=true&holder=NGUYEN%20QUOC%20KIET&store=Nh%C3%A0%20M%C3%A8o%20Manifest",
+            50: "https://vietqr.app/img?bank=TPBank&acc=13495676789&template=&amount=50000&des=TKP254&showinfo=true&fullacc=true&holder=NGUYEN%20QUOC%20KIET&store=Nh%C3%A0%20M%C3%A8o%20Manifest",
+            100: "https://vietqr.app/img?bank=TPBank&acc=13495676789&template=&amount=100000&des=TKP254&showinfo=true&fullacc=true&holder=NGUYEN%20QUOC%20KIET&store=Nh%C3%A0%20M%C3%A8o%20Manifest"
+        };
+
+        function selectPackage(amount) {
+            selectedXu = amount;
+            document.querySelectorAll('.pkg-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-pkg-${amount}`).classList.add('active');
+            document.getElementById('qr-image').src = qrData[amount];
+        }
+
+        function openPaymentModal() { document.getElementById('paymentModal').classList.add('active'); }
+        function closePaymentModal(e) { if (e.target.id === 'paymentModal') document.getElementById('paymentModal').classList.remove('active'); }
+        function forceClosePaymentModal() { document.getElementById('paymentModal').classList.remove('active'); }
+
+        function verifyPayment() {
+            let btn = document.getElementById('btnConfirmPay');
+            btn.innerHTML = "⏳ Đang quét hệ thống ngân hàng...";
+            btn.classList.add('loading');
+
+            setTimeout(() => {
+                window.updateCurrentWallet(selectedXu);
+                btn.innerHTML = "XÁC NHẬN ĐÃ CHUYỂN KHOẢN";
+                btn.classList.remove('loading');
+                forceClosePaymentModal();
+                alert(`🎉 THANH TOÁN THÀNH CÔNG!\nHệ thống đã cộng ${selectedXu} Xu vào tài khoản.`);
+            }, 2500);
+        }
+
+        const detailedAnalysis = {
+            1: `<div class="pdf-highlight">"Sức mạnh của sự khởi đầu, tư duy độc lập và năng lực kiến tạo vận mệnh."</div><h4>Đặc điểm tính cách</h4><p>Đại diện cho bản lĩnh và cái tôi cá nhân. Bạn sinh ra để làm người dẫn đường, sở hữu ý chí sắt đá, khao khát khẳng định bản thân.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Sáng tạo, đột phá. Phù hợp làm CEO, quản lý dự án.</li><li>**Thử thách:** Ghét bị sai bảo, dễ bất mãn nếu dưới quyền người kém cỏi.</li></ul><h4>Lời khuyên</h4><ul><li>Hãy phân biệt "tự tin" và "độc đoán". Dùng sức mạnh để nâng đỡ người khác.</li></ul>`,
+            2: `<div class="pdf-highlight">"Đại sứ của hòa bình, trực giác thấu cảm và năng lượng chữa lành."</div><h4>Đặc điểm tính cách</h4><p>Biểu tượng của sự hợp tác và cân bằng. Trực giác của bạn cực kỳ nhạy bén, luôn khao khát yêu thương và môi trường hòa hợp.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Đàm phán, hòa giải tuyệt vời. Hợp với tâm lý học, ngoại giao.</li><li>**Thử thách:** Thiếu quyết đoán, hay chần chừ vì sợ làm mất lòng.</li></ul><h4>Lời khuyên</h4><ul><li>Hãy thiết lập ranh giới cá nhân, đừng biến mình thành thùng rác cảm xúc.</li></ul>`,
+            3: `<div class="pdf-highlight">"Ngọn hải đăng của sự sáng tạo, niềm vui và ngôn từ truyền cảm hứng."</div><h4>Đặc điểm tính cách</h4><p>Bạn được vũ trụ ban tặng món quà lớn nhất là khả năng diễn đạt. Bạn luôn biết cách làm câu chuyện trở nên thu hút.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Trí tưởng tượng phong phú. Phù hợp truyền thông, nghệ thuật.</li><li>**Thử thách:** Dễ "cả thèm chóng chán", thiếu kỷ luật với số liệu.</li></ul><h4>Lời khuyên</h4><ul><li>Ngôn từ có sức mạnh kiến tạo hoặc hủy diệt. Đừng dùng lời nói sát thương.</li></ul>`,
+            4: `<div class="pdf-highlight">"Hòn đá tảng vững chắc, hiện thân của kỷ luật, cấu trúc và tính thực tế."</div><h4>Đặc điểm tính cách</h4><p>Bạn đại diện cho sự quy củ và tính logic. Bạn không tin may rủi, chỉ tin vào kết quả đo lường được bằng sự chăm chỉ.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Quản trị hệ thống xuất sắc. Phù hợp tài chính, kỹ thuật, kiến trúc.</li><li>**Thử thách:** Đôi khi bảo thủ, cứng nhắc, sợ rủi ro.</li></ul><h4>Lời khuyên</h4><ul><li>Hãy cho phép bản thân nghỉ ngơi. Linh hoạt đón nhận các ý tưởng mới.</li></ul>`,
+            5: `<div class="pdf-highlight">"Cơn gió của sự linh hoạt, phiêu lưu, và sự chuyển đổi không ngừng."</div><h4>Đặc điểm tính cách</h4><p>Bạn ghét sự ràng buộc, tò mò với mọi thứ, can đảm và luôn muốn khám phá giới hạn của bản thân.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Thích nghi đỉnh cao. Tư duy mở. Hợp du lịch, kinh doanh tự do.</li><li>**Thử thách:** Thiếu bền bỉ, dễ nản chí, trốn tránh trách nhiệm.</li></ul><h4>Lời khuyên</h4><ul><li>Tự do đích thực phải sinh ra từ kỷ luật. Tìm đam mê lớn để neo giữ năng lượng.</li></ul>`,
+            6: `<div class="pdf-highlight">"Trái tim của người mẹ, tình yêu thương vô điều kiện và trách nhiệm."</div><h4>Đặc điểm tính cách</h4><p>Bạn sinh ra với trái tim ấm áp, giàu lòng trắc ẩn. Năng lượng số 6 cũng mang tần số của nghệ thuật và khiếu thẩm mỹ tuyệt vời.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Trách nhiệm vô song. Phù hợp giáo dục, y tế, thiết kế.</li><li>**Thử thách:** Hay lo chuyện bao đồng, tự làm bản thân kiệt sức.</li></ul><h4>Lời khuyên</h4><ul><li>Không thể rót nước cho người khác khi bình của mình cạn. Hãy yêu mình trước.</li></ul>`,
+            7: `<div class="pdf-highlight">"Nhà triết gia đơn độc, tư duy phản biện và chiều sâu tâm linh."</div><h4>Đặc điểm tính cách</h4><p>Luôn tự đi tìm tận gốc rễ sự thật. Đời sống nội tâm phong phú, sở hữu kho tri thức khổng lồ nhưng thích không gian đơn độc.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Tư duy logic, tự học cực đỉnh. Phù hợp lập trình viên, nghiên cứu.</li><li>**Thử thách:** Cái tôi tri thức cao. Hoài nghi mọi thứ, khó làm việc nhóm.</li></ul><h4>Lời khuyên</h4><ul><li>Tri thức chỉ giá trị khi được chia sẻ. Hãy mở lòng tin tưởng người khác.</li></ul>`,
+            8: `<div class="pdf-highlight">"Biểu tượng của quyền lực, tài chính, sự điều hành và thịnh vượng."</div><h4>Đặc điểm tính cách</h4><p>Bạn thực tế, tham vọng và sinh ra để chinh phục mục tiêu vật chất. Bạn luôn toát ra phong thái của người làm chủ cuộc chơi.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Kinh doanh nhạy bén, quản lý dòng tiền tốt. Điều hành quy mô lớn.</li><li>**Thử thách:** Quá thực dụng, lạnh lùng trong tình cảm vì lợi nhuận.</li></ul><h4>Lời khuyên</h4><ul><li>Tiền bạc là công cụ phục vụ cuộc đời, không phải trói buộc tâm hồn.</li></ul>`,
+            9: `<div class="pdf-highlight">"Linh hồn lão thành, tinh thần nhân đạo và lý tưởng hoàn thiện."</div><h4>Đặc điểm tính cách</h4><p>Hướng tới lý tưởng cao đẹp: giúp đỡ cộng đồng, bảo vệ người yếu thế. Bạn là hình mẫu của lòng vị tha.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Tầm nhìn vĩ mô. Phù hợp công tác xã hội, lãnh đạo cộng đồng.</li><li>**Thử thách:** Mơ mộng lý tưởng hóa, thiếu thực tế trong quản lý tài chính.</li></ul><h4>Lời khuyên</h4><ul><li>Học cách cân bằng giữa lý tưởng lớn và đời sống vật chất hiện tại.</li></ul>`,
+            11: `<div class="pdf-highlight">"Sứ giả của ánh sáng, tâm linh và sự giác ngộ."</div><h4>Đặc điểm tính cách</h4><p>Chứa tần số rung động cực cao. Bạn như một "ăng-ten" của vũ trụ, có linh cảm nhạy bén hoặc kết nối tâm linh sâu sắc.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Nguồn cảm hứng vô tận, bậc thầy chữa lành tâm hồn.</li><li>**Thử thách:** Thần kinh dễ căng thẳng. Dễ trầm cảm nếu chạy theo vật chất.</li></ul><h4>Lời khuyên</h4><ul><li>Rèn luyện thiền định. Đời sống tâm linh phải bám rễ vững chắc vào thực tế.</li></ul>`,
+            22: `<div class="pdf-highlight">"Bậc thầy kiến tạo vĩ đại, biến lý tưởng thành vật chất."</div><h4>Đặc điểm tính cách</h4><p>Bạn có tầm nhìn vĩ mô của số 11 và kỷ luật thép của số 4. Sinh ra không chỉ để mơ ước, mà để biến ước mơ thành đế chế.</p><h4>Công việc & Sự nghiệp</h4><ul><li>**Thế mạnh:** Năng lực làm việc phi thường. Thích hợp dự án tầm cỡ quốc tế.</li><li>**Thử thách:** Áp lực tự đặt ra quá khủng khiếp. Dễ trở thành kẻ thao túng.</li></ul><h4>Lời khuyên</h4><ul><li>Dùng quyền năng to lớn để xây dựng giá trị trường tồn. Luôn giữ sự khiêm nhường.</li></ul>`
+        };
+
+        const charMap = { 'A':1, 'B':2, 'C':3, 'D':4, 'E':5, 'F':6, 'G':7, 'H':8, 'I':9, 'J':1, 'K':2, 'L':3, 'M':4, 'N':5, 'O':6, 'P':7, 'Q':8, 'R':9, 'S':1, 'T':2, 'U':3, 'V':4, 'W':5, 'X':6, 'Y':7, 'Z':8 };
+        const vowels = ['A', 'E', 'I', 'O', 'U', 'Y'];
+
+        function removeTones(str) { return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D"); }
+        function reduce(num, keepMaster = true) {
+            if (!num || isNaN(num) || num === 0) return 0;
+            while (num > 9) {
+                if (keepMaster && (num === 11 || num === 22 || num === 33)) break;
+                let sum = 0; for (let char of num.toString()) sum += parseInt(char);
+                if (sum === 1 && !keepMaster) sum = 10; num = sum;
+            } return num;
+        }
+
+        let currentReportData = [];
+        let userInfo = {};
+
+        function openDetailModal(title, define, value) {
+            if (value === "N/A" || value === "Không có" || value === 0) return;
+            document.getElementById('modalTitle').innerText = title + " - " + define;
+            document.getElementById('modalNumber').innerText = value;
+            let modalBody = document.getElementById('modalBody');
+            let processHtml = (html) => html.replace(/pdf-highlight/g, "highlight-box");
+
+            if (typeof value === 'string' && value.includes(',')) {
+                let nums = value.split(',').map(n => n.trim());
+                let html = `<p>Bạn mang tổ hợp trường năng lượng. Phân tích chi tiết:</p>`;
+                nums.forEach(n => {
+                    html += `<h4 style="color:#e8a0ff; margin-top:20px;">[ SỐ ${n} ]</h4>`;
+                    html += processHtml(detailedAnalysis[n]) || "<p>Đang giải mã...</p>";
+                });
+                modalBody.innerHTML = html;
+            } else {
+                modalBody.innerHTML = processHtml(detailedAnalysis[value]) || `<p>Chưa có dữ liệu.</p>`;
+            }
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeModal(e) { if (e.target.id === 'detailModal') document.getElementById('detailModal').classList.remove('active'); }
+        function forceCloseModal() { document.getElementById('detailModal').classList.remove('active'); }
+
+        function calculateData(tier, btnEl, cost) {
+            if (window.currentXu < cost) {
+                alert(`Bạn cần ${cost} Xu để xem gói VIP này. Số dư hiện tại: ${window.currentXu} Xu.\nVui lòng bấm [💳 Nạp Xu] ở góc trên!`);
+                return;
+            }
+
+            let rawName = document.getElementById('fullname').value.trim(), dob = document.getElementById('dob').value, tob = document.getElementById('tob').value, gender = document.getElementById('gender').value;
+            if (!rawName || !dob) { alert("Vui lòng nhập Họ Tên và Ngày Sinh!"); return; }
+
+            if (cost > 0) {
+                let confirmPay = confirm(`Hệ thống sẽ trừ ${cost} Xu để mở khóa gói VIP. Bạn đồng ý chứ?`);
+                if (!confirmPay) return;
+                window.updateCurrentWallet(-cost);
+                setTimeout(() => { alert(`✅ Đã trừ ${cost} Xu. Chúc bạn trải nghiệm Bản Đồ VIP thành công!`); }, 100);
+            }
+
+            document.querySelectorAll('.tier-btn').forEach(btn => btn.classList.remove('active')); btnEl.classList.add('active');
+            userInfo = { name: rawName, dob: dob, gender: gender };
+
+            let [year, month, day] = dob.split('-').map(Number);
+            let rDay = reduce(day), rMonth = reduce(month), rYear = reduce(year);
+            let cleanName = removeTones(rawName).toUpperCase().replace(/[^A-Z\s]/g, '');
+            let words = cleanName.split(' ').filter(w => w.length > 0);
+            let givenName = words.length > 0 ? words[words.length - 1] : "";
+            
+            let destinySum = 0, soulSum = 0, persSum = 0, initialsSum = 0, numberFreq = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0};
+            words.forEach(word => {
+                initialsSum += charMap[word[0]] || 0;
+                for (let char of word) {
+                    let val = charMap[char];
+                    if (val) { destinySum += val; numberFreq[val]++; if (vowels.includes(char)) soulSum += val; else persSum += val; }
+                }
+            });
+
+            let lifePath = reduce(reduce(day) + reduce(month) + reduce(year)), destiny = reduce(destinySum), soul = reduce(soulSum), personality = reduce(persSum);
+            let tobSum = 0; if(tob) tob.replace(':', '').split('').forEach(d => tobSum += parseInt(d)); let timeNum = reduce(tobSum, false);
+            let attitude = reduce(day + month), maturity = reduce(lifePath + destiny), balance = reduce(initialsSum);
+            let maxFreq = 0, hiddenPassion = [], karmicLessons = [];
+            for (let i = 1; i <= 9; i++) {
+                if (numberFreq[i] > maxFreq) { maxFreq = numberFreq[i]; hiddenPassion = [i]; }
+                else if (numberFreq[i] === maxFreq) hiddenPassion.push(i);
+                if (numberFreq[i] === 0) karmicLessons.push(i);
+            }
+            
+            let logicSum = 0; for(let char of givenName) logicSum += charMap[char]; let logic = reduce(logicSum + day);
+            let currentYear = new Date().getFullYear(), currentMonth = new Date().getMonth() + 1;
+            let personalYear = reduce(day + month + currentYear), personalMonth = reduce(personalYear + currentMonth);
+            let p1 = reduce(rDay + rMonth), p2 = reduce(rDay + rYear), p3 = reduce(p1 + p2), p4 = reduce(rMonth + rYear);
+            let c1 = Math.abs(rDay - rMonth), c2 = Math.abs(rDay - rYear), bridge = Math.abs(lifePath - destiny);
+
+            const allMetrics = [
+                { title: "Chủ Đạo", val: lifePath, define: "Định hướng cuộc đời" }, { title: "Sứ Mệnh", val: destiny, define: "Mục đích sinh ra" },
+                { title: "Linh Hồn", val: soul, define: "Khao khát nội tâm" }, { title: "Nhân Cách", val: personality, define: "Ấn tượng tạo ra" },
+                { title: "Giờ Sinh", val: timeNum || "N/A", define: "Năng lượng bề mặt" }, { title: "Thái Độ", val: attitude, define: "Cách phản ứng" },
+                { title: "Ngày Sinh", val: rDay, define: "Năng lực bẩm sinh" }, { title: "Trưởng Thành", val: maturity, define: "Sức mạnh sau 35 tuổi" },
+                { title: "Cân Bằng", val: balance, define: "Vượt qua khủng hoảng" }, { title: "Đam Mê", val: hiddenPassion.join(', ') || "N/A", define: "Sở trường vượt trội" },
+                { title: "Khuyết Thiếu", val: karmicLessons.length ? karmicLessons.join(', ') : "Không", define: "Bài học rèn luyện" }, { title: "Logic", val: logic, define: "Cách ra quyết định" },
+                { title: "Năm Cá Nhân", val: personalYear, define: `Trọng tâm ${currentYear}` }, { title: "Tháng Cá Nhân", val: personalMonth, define: `Sự kiện tháng ${currentMonth}` },
+                { title: "Đỉnh Cao 1", val: p1, define: "Thành tựu thanh xuân" }, { title: "Đỉnh Cao 2", val: p2, define: "Thành tựu trưởng thành" },
+                { title: "Đỉnh Cao 3", val: p3, define: "Thành tựu chín muồi" }, { title: "Đỉnh Cao 4", val: p4, define: "Thành tựu viên mãn" },
+                { title: "Thử Thách 1", val: c1, define: "Trở ngại đầu đời" }, { title: "Thử Thách 2", val: c2, define: "Trở ngại rèn luyện" },
+                { title: "Cầu Nối", val: bridge, define: "Liên kết tâm hồn & Sứ mệnh" }
+            ];
+
+            currentReportData = allMetrics.slice(0, tier);
+            let htmlContent = "";
+            currentReportData.forEach((item, index) => {
+                htmlContent += `
+                    <div class="card" style="animation-delay: ${index * 0.05}s" onclick="openDetailModal('${item.title}', '${item.define}', '${item.val}')">
+                        <h3>${item.title}</h3>
+                        <div class="meaning-label">${item.define}</div>
+                        <div class="number">${item.val}</div>
+                    </div>`;
+            });
+            document.getElementById('gridContainer').innerHTML = htmlContent;
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('export-section').style.display = tier > 5 ? 'block' : 'none';
+        }
+
+        function downloadPDF() {
+            let btn = document.getElementById('btnExport');
+            btn.innerHTML = "ĐANG TẠO BẢN IN PDF...";
+            btn.classList.add('loading');
+
+            let [y, m, d] = userInfo.dob.split('-');
+            let reportHtml = `
+                <div class="pdf-header-container">
+                    <div class="pdf-title">BÁO CÁO TẦN SỐ LINH HỒN</div>
+                    <div class="pdf-user-info">
+                        <div><strong>HỌ TÊN:</strong> <span>${userInfo.name.toUpperCase()}</span></div>
+                        <div><strong>GIỚI TÍNH:</strong> <span>${userInfo.gender.toUpperCase()}</span></div>
+                        <div><strong>NGÀY SINH:</strong> <span>${d}/${m}/${y}</span></div>
+                    </div>
+                </div>
+                <div class="pdf-grid-layout">
+            `;
+
+            currentReportData.forEach(item => {
+                let val = item.val;
+                let detailHtml = "";
+                if (val === "N/A" || val === "Không có" || val === "Không" || val === 0) {
+                    detailHtml = "<p><em>Không áp dụng ở chỉ số này.</em></p>";
+                } else if (typeof val === 'string' && val.includes(',')) {
+                    let nums = val.split(',').map(n => n.trim());
+                    nums.forEach(n => {
+                        detailHtml += `<h4>[ Số ${n} ]</h4>`;
+                        detailHtml += detailedAnalysis[n] || "<p>Chưa có diễn giải.</p>";
+                    });
+                } else {
+                    detailHtml = detailedAnalysis[val] || `<p>Chưa có diễn giải.</p>`;
+                }
+
+                reportHtml += `
+                    <div class="pdf-card-item">
+                        <div class="pdf-item-header">
+                            <div class="pdf-item-title-group">
+                                <h3>${item.title}</h3>
+                                <p>${item.define}</p>
+                            </div>
+                            <div class="pdf-item-number">${val}</div>
+                        </div>
+                        <div class="pdf-item-body">${detailHtml}</div>
+                    </div>
+                `;
+            });
+            reportHtml += `</div>`;
+            document.getElementById('detailed-report-section').innerHTML = reportHtml;
+
+            document.getElementById('top-nav').style.display = 'none';
+            document.getElementById('space-portal').style.display = 'none';
+            document.getElementById('user-input-panel').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('main-header').style.display = 'none';
+            document.getElementById('detailed-report-section').style.display = 'block';
+
+            let fileName = `BaoCao_ThanSoHoc_${removeTones(userInfo.name).replace(/\s/g, '_')}.pdf`;
+            const element = document.getElementById('pdf-content');
+            
+            const opt = {
+                margin: 10, 
+                filename: fileName,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 3, useCORS: true, backgroundColor: '#07020d', logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.getElementById('top-nav').style.display = 'flex';
+                document.getElementById('space-portal').style.display = 'block';
+                document.getElementById('user-input-panel').style.display = 'block';
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('main-header').style.display = 'block';
+                document.getElementById('detailed-report-section').style.display = 'none';
+                btn.innerHTML = "📥 Tải Báo Cáo PDF Gọn Gàng";
+                btn.classList.remove('loading');
+            });
+        }
+    </script>
+</body>
+</html>
